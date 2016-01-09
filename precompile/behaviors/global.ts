@@ -14,29 +14,70 @@ class Actor {
     this.name = name;
     this.chart = chart;
   }
+  static factory(name: string, chart: Chart): Actor {
+    var actor = chart.actorsByName[name];
+    if (!actor) {
+      chart.actors.push(chart.actorsByName[name] = actor = new Actor(name, chart)); 
+    }
+     return actor;
+  }
+  getIndex(): number {
+    return chart.actors.indexOf(this);
+  }
   getWidth(): number {
-    return (chart.width / _.size(chart.actors)) - (chart.padding * 2) 
+    return (chart.width / _.size(chart.actors)) - (chart.padding * 2); 
+  }
+  getHeight(): number {
+    return 40;
+  }
+  getX(): number {
+    return (this.getWidth() + chart.padding) * this.getIndex();
   }
   render(): any {
     return [
-      $.createSvgTag('rect', { x: 0, y: 0, width: this.getWidth(), height: 40}),
-      $.createSvgTag('text', { x: 20, y: 20 }, this.name)
-    ];
+      //$.createSvgTag('rect', { x: this.getX(), y: 0, width: this.getWidth(), height: this.getHeight()}),
+      $.createSvgTag('text', { x: this.getX() + 25, y: 25 }, this.name),
+      $.createSvgTag('rect', { class: 'strip', x: this.getX() + (this.getWidth()/2), y: this.getHeight(), width: 20, height: this.chart.height - this.getHeight() })
+    ];2
   } 
 }
 
+enum Direction { Left, Right };
 class Sequence {
   public label: string;
   chart: Chart;
-  constructor(label: string, chart: Chart) {
+  actor1: Actor;
+  actor2: Actor;
+  constructor(label: string, actor1: Actor, actor2: Actor, chart: Chart) {
     this.label = label;
     this.chart = chart;
+    this.actor1 = actor1;
+    this.actor2 = actor2;
   }
+  getIndex(): number {
+    return chart.sequences.indexOf(this);
+  }  
   getWidth(): number {
-    return 100; 
+    return Math.abs(this.actor1.getX() - this.actor2.getX()); 
   }
+  getX(): number {
+    return Math.min(this.actor1.getX(), this.actor2.getX());
+  }
+  getY(): number {
+    return this.getHeight() * this.getIndex();
+  }
+  getHeight(): number {
+    return 40; 
+  }
+  getDirection(): Direction {
+    return this.actor1.getX() < this.actor2.getX() ? 
+      Direction.Right : 
+      Direction.Left;
+  } 
   render(): any {
     return [
+      $.createSvgTag('line', { x1: this.getX(), y1: this.getY(), x2: this.getX() + this.getWidth(), y2: this.getY() }),
+      $.createSvgTag('polygon', { points: "30,30 30,50 50,30" }) // draw on the actor2 side, and detect direction
     ];
   } 
 }
@@ -52,18 +93,15 @@ class Chart {
     this.svg = $.createSvgTag('svg', { width: width, height: height }, '').appendTo(el);
   }
 
-  actors: { [name: string]: Actor } = {}
+  actorsByName: {[name: string]: Actor} = {};
+  actors: Actor[] = [];
   sequences: Sequence[] = [];
   
   newSequence(src: string, dst: string, label: string): void {
-    if (this.actors[src] === undefined) {
-      this.actors[src] = new Actor(src, chart);
-    }
-    if (this.actors[dst] === undefined) {   
-      this.actors[dst] = new Actor(dst, chart);
-    }
-    
-    this.sequences.push(new Sequence(label, chart));
+    this.sequences.push(new Sequence(label,
+      Actor.factory(src, this),
+      Actor.factory(dst, this),
+      this));
   }
  
   render(): void {

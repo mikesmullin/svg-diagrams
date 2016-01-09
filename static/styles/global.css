@@ -8,10 +8,21 @@ body {
   color: #fff;
   margin: 2em;
 }
+body p {
+  margin: 0 0 1em 0;
+}
+svg {
+  background: #222;
+}
 svg rect {
   stroke: #fff;
   stroke-width: 4px;
   fill-opacity: 0;
+}
+svg rect.strip {
+  stroke-width: 0;
+  fill-opacity: 1;
+  fill: #ccc;
 }
 svg text {
   fill: #fff;

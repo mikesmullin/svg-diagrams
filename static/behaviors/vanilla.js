@@ -58,7 +58,17 @@ _.size = function(obj) {
   if (obj == null) return 0
   return isArrayLike(obj) ? obj.length : _.keys(obj).length;
 }
-
+_.contains = function(list, value) {
+  return list.indexOf(list, value) >= 0
+}
+_.filter = function(obj, predicate, context) {
+  var results = [];
+  predicate = cb(predicate, context);
+  _.each(obj, function(value, index, list) {
+    if (predicate(value, index, list)) results.push(value);
+  });
+  return results;
+};
 
 
 // DOM Manipulation

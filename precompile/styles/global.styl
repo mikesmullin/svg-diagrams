@@ -8,11 +8,20 @@ body
   color white
   margin 2em
   
+  p
+    margin 0 0 1em 0
+      
 svg
+  background #222
+    
   rect
     stroke white
     stroke-width 4px
     fill-opacity 0
+    &.strip
+      stroke-width 0
+      fill-opacity 1
+      fill #ccc
   text
     fill white
     font-size 40
