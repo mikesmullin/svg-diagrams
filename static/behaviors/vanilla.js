@@ -29,10 +29,17 @@ Element.prototype.on = function(event, fn) {
 // Enumeration
 var _ = {}
 _.isObject = function(o) { return o !== null && typeof o === 'object' }
+// array-like (e.g., NodeList does not extend Array but it iterates like one)
+var isArrayLike = function(collection) {
+  return collection.length != null && typeof collection.length == 'number' && collection.length > 0 
+}
+_.has = function(obj, key) {
+  return obj != null && hasOwnProperty.call(obj, key)
+}
 // cb type is function(value, key) return false to break
 _.each = function(o, cb) {
   if (!o) return
-  if (typeof o.length == 'number' && o.length > 0) { // array-like (e.g., NodeList does not extend Array but it iterates like one)
+  if (isArrayLike(o)) {
     for (var i=0; i<o.length; i++)
       if (false === cb(o[i], i))
         return
@@ -41,16 +48,31 @@ _.each = function(o, cb) {
       if (o.hasOwnProperty(k) && false === cb(o[k], k))
         return
 }
+_.keys = function(obj) {
+  if (!_.isObject(obj)) return [];
+  var keys = [];
+  for (var key in obj) if (_.has(obj, key)) keys.push(key);
+  return keys;
+}
+_.size = function(obj) {
+  if (obj == null) return 0
+  return isArrayLike(obj) ? obj.length : _.keys(obj).length;
+}
+
+
 
 // DOM Manipulation
-$.createTag = function(tag, attrs, content) {
-  var e = document.createElement(tag)
+$.createTag = function(tag, attrs, content, ns) {
+  var e = document.createElementNS(ns, tag)
   if (_.isObject(attrs))
     for (var key in attrs)
       e.setAttribute(key, attrs[key])
   if (content)
     e.innerHTML = content
   return e
+}
+$.createSvgTag = function(tag, attrs, content) {
+  return $.createTag(tag, attrs, content, 'http://www.w3.org/2000/svg')
 }
 $.createHtml = function(html) {
   return $.createTag("div", null, html).childNodes[0]

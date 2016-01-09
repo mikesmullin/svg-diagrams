@@ -8,3 +8,14 @@ body {
   color: #fff;
   margin: 2em;
 }
+svg rect {
+  stroke: #fff;
+  stroke-width: 4px;
+  fill-opacity: 0;
+}
+svg text {
+  fill: #fff;
+  font-size: 40;
+  font-family: Arial;
+  text-anchor: start;
+}
