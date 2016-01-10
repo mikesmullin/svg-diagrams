@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Web Sequence Diagram Demo</title>
+    <link rel="stylesheet" href="styles/global.css">
+    <link rel="stylesheet" href="styles/seqdia.css">
+  </head>
+  <body>
+    <h1>Web Sequence Diagram</h1>
+    <p>Demonstrating achievement with custom html5 + css3 + svg + javascript implementation.</p>
+    <div id="content"></div>
+    <p>Will provide a simple markup DSL to define the graph next.</p>
+    <script src="behaviors/vanilla.js"></script>
+    <script src="behaviors/seqdia.js"></script>
+    <script>
+      // Example
+      var chart = new SequenceDiagram(800, 400, '#content');
+      chart.newSequence('Browser', 'ServerA', '*http* tcp/80 plain-text');
+      chart.newSequence('ServerA', 'ServerB', '*https* tcp/443 encrypted');
+      chart.newSequence('ServerB', 'ServerA', '*https* tcp/443 encrypted');
+      chart.newSequence('ServerA', 'Browser', '*http* tcp/80 plain-text');
+      chart.newSequence('ServerA', 'ServerC', 'send datas');
+      chart.render();
+    </script>
+  </body>
+</html>

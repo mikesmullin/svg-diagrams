@@ -1,0 +1,28 @@
+svg {
+  background: #222;
+  width: 75%;
+  height: 75%;
+}
+svg rect {
+  stroke: #fff;
+  stroke-width: 4px;
+  fill-opacity: 0;
+}
+svg rect.strip {
+  stroke-width: 0;
+  fill-opacity: 1;
+  fill: #333;
+}
+svg text {
+  fill: #fff;
+  font-size: 40;
+  font-family: Arial;
+  text-anchor: middle;
+}
+svg line {
+  stroke: #fff;
+  stroke-width: 4px;
+}
+svg polygon {
+  fill: #fff;
+}

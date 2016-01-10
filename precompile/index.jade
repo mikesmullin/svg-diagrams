@@ -1,0 +1,22 @@
+doctype html
+html
+  head
+    title Web Sequence Diagram Demo
+    link(rel="stylesheet" href="styles/global.css")
+    link(rel="stylesheet" href="styles/seqdia.css")
+  body
+    h1 Web Sequence Diagram
+    p Demonstrating achievement with custom html5 + css3 + svg + javascript implementation.
+    #content
+    p Will provide a simple markup DSL to define the graph next.
+    script(src="behaviors/vanilla.js")
+    script(src="behaviors/seqdia.js")
+    script.
+      // Example
+      var chart = new SequenceDiagram(800, 400, '#content');
+      chart.newSequence('Browser', 'ServerA', '*http* tcp/80 plain-text');
+      chart.newSequence('ServerA', 'ServerB', '*https* tcp/443 encrypted');
+      chart.newSequence('ServerB', 'ServerA', '*https* tcp/443 encrypted');
+      chart.newSequence('ServerA', 'Browser', '*http* tcp/80 plain-text');
+      chart.newSequence('ServerA', 'ServerC', 'send datas');
+      chart.render();
