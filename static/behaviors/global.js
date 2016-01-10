@@ -5,6 +5,8 @@
 var Chart = (function () {
     var Actor = (function () {
         function Actor(name, chart) {
+            this.textHeight = 12;
+            this.stripWidth = 20;
             this.name = name;
             this.chart = chart;
         }
@@ -16,25 +18,30 @@ var Chart = (function () {
             return actor;
         };
         Actor.prototype.getIndex = function () {
-            return chart.actors.indexOf(this);
+            return this.chart.actors.indexOf(this);
         };
         Actor.prototype.getWidth = function () {
-            return (chart.width / _.size(chart.actors)) - (chart.padding * 2);
+            return (this.chart.width -
+                (this.chart.padding * (_.size(chart.actors) + 1))) / _.size(chart.actors);
         };
         Actor.prototype.getHeight = function () {
             return 40;
         };
         Actor.prototype.getX = function () {
-            return (this.getWidth() + chart.padding) * this.getIndex();
+            return ((this.getWidth() + this.chart.padding) * this.getIndex()) + this.chart.padding;
         };
         Actor.prototype.getY = function () {
-            return 0;
+            return this.chart.padding;
         };
         Actor.prototype.render = function () {
             return [
-                //$.createSvgTag('rect', { x: this.getX(), y: 0, width: this.getWidth(), height: this.getHeight()}),
-                $.createSvgTag('text', { x: this.getX() + 25, y: this.getY() + 25 }, this.name),
-                $.createSvgTag('rect', { class: 'strip', x: this.getX() + (this.getWidth() / 2), y: this.getHeight(), width: 20, height: this.chart.height - this.getHeight() })
+                $.createSvgTag('rect', { class: 'strip',
+                    x: this.getX() + (this.getWidth() / 2) - (this.stripWidth / 2),
+                    y: this.getY() + this.getHeight(),
+                    width: this.stripWidth,
+                    height: this.chart.height - this.getHeight() - this.getY() }),
+                $.createSvgTag('rect', { x: this.getX(), y: this.getY(), width: this.getWidth(), height: this.getHeight() }),
+                $.createSvgTag('text', { x: this.getX() + (this.getWidth() / 2), y: this.getY() + (this.getHeight() / 2) + (this.textHeight / 2) }, this.name)
             ];
         };
         return Actor;
@@ -47,6 +54,8 @@ var Chart = (function () {
     ;
     var Sequence = (function () {
         function Sequence(label, actor1, actor2, chart) {
+            this.arrowWidth = 15;
+            this.labelHeight = 15;
             this.label = label;
             this.chart = chart;
             this.actor1 = actor1;
@@ -56,19 +65,19 @@ var Chart = (function () {
             return chart.sequences.indexOf(this);
         };
         Sequence.prototype.getWidth = function () {
-            return Math.abs(this.actor1.getX() - this.actor2.getX()) -
-                Sequence.arrowWidth;
+            return Math.abs(this.actor1.getX() - this.actor2.getX());
         };
         Sequence.prototype.getX = function () {
             return Math.min(this.actor1.getX(), this.actor2.getX()) +
-                (this.actor1.getWidth() / 2) +
-                (this.getDirection() == Direction.Left ? 0 : Sequence.arrowWidth);
+                (this.actor1.getWidth() / 2);
         };
         Sequence.prototype.getY = function () {
-            return (this.actor1.getHeight() * 2) + (this.getHeight() * this.getIndex());
+            return this.actor1.getY() + this.actor1.getHeight() +
+                this.chart.padding +
+                (this.getHeight() * this.getIndex());
         };
         Sequence.prototype.getHeight = function () {
-            return 40;
+            return 50;
         };
         Sequence.prototype.getDirection = function () {
             return this.actor1.getX() < this.actor2.getX() ?
@@ -84,14 +93,21 @@ var Chart = (function () {
         };
         Sequence.prototype.render = function () {
             return [
-                $.createSvgTag('text', { x: this.getX(), y: this.getY() - Sequence.labelHeight }, this.label),
-                $.createSvgTag('line', { x1: this.getX(), y1: this.getY(), x2: this.getX() + this.getWidth(), y2: this.getY() }),
-                $.createSvgTag('polygon', { points: "0,0 0," + Sequence.arrowWidth + " " + Sequence.arrowWidth + ",0",
-                    transform: "translate(" + this.getArrowX() + ", " + this.getY() + ") rotate(" + this.getArrowAngle() + ")" }) // draw on the actor2 side, and detect direction
+                $.createSvgTag('text', {
+                    x: this.getX() + (this.getWidth() / 2),
+                    y: this.getY() + (this.getHeight() / 2) - (this.labelHeight / 2) }, this.label),
+                $.createSvgTag('line', {
+                    x1: this.getX() +
+                        (this.getDirection() == Direction.Left ? this.arrowWidth / 2 : 0),
+                    y1: this.getY() + (this.getHeight() / 2),
+                    x2: this.getX() + this.getWidth() -
+                        (this.getDirection() == Direction.Right ? this.arrowWidth / 2 : 0),
+                    y2: this.getY() + (this.getHeight() / 2) }),
+                $.createSvgTag('polygon', { points: "0,0 0," + this.arrowWidth + " " + this.arrowWidth + ",0",
+                    transform: "translate(" + this.getArrowX() + ", " +
+                        (this.getY() + (this.getHeight() / 2)) + ") rotate(" + this.getArrowAngle() + ")" }) // draw on the actor2 side, and detect direction
             ];
         };
-        Sequence.arrowWidth = 15;
-        Sequence.labelHeight = 10;
         return Sequence;
     })();
     var Chart = (function () {
@@ -102,7 +118,7 @@ var Chart = (function () {
             this.sequences = [];
             this.width = width;
             this.height = height;
-            this.svg = $.createSvgTag('svg', { width: width, height: height }, '').appendTo(el);
+            this.svg = $.createSvgTag('svg', { viewBox: "0 0 " + width + " " + height, preserveAspectRatio: "xMidYmin meet" }, '').appendTo(el);
         }
         Chart.prototype.newSequence = function (src, dst, label) {
             this.sequences.push(new Sequence(label, Actor.factory(src, this), Actor.factory(dst, this), this));
@@ -125,9 +141,10 @@ var Chart = (function () {
     return Chart;
 })();
 // Example
-var chart = new Chart(400, 200, 'body');
+var chart = new Chart(800, 400, 'body');
 chart.newSequence('UnityDeveloper', 'PackageServer', '*http* tcp/80 plain-text');
 chart.newSequence('PackageServer', 'FABRIKA', '*https* tcp/443 encrypted');
 chart.newSequence('FABRIKA', 'PackageServer', '*https* tcp/443 encrypted');
 chart.newSequence('PackageServer', 'UnityDeveloper', '*http* tcp/80 plain-text');
+chart.newSequence('PackageServer', 'NewThing', 'send datas');
 chart.render();

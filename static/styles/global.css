@@ -13,6 +13,8 @@ body p {
 }
 svg {
   background: #222;
+  width: 75%;
+  height: 75%;
 }
 svg rect {
   stroke: #fff;
@@ -22,13 +24,13 @@ svg rect {
 svg rect.strip {
   stroke-width: 0;
   fill-opacity: 1;
-  fill: #ccc;
+  fill: #333;
 }
 svg text {
   fill: #fff;
   font-size: 40;
   font-family: Arial;
-  text-anchor: start;
+  text-anchor: middle;
 }
 svg line {
   stroke: #fff;
