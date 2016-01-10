@@ -1,8 +1,5 @@
-//interface Vanilla {
-//  createHtml(tag:string, attrs?:{[key: string]: string}, content?:string): HTMLElement;  
-//}
 'use strict';
-var Chart = (function () {
+var SequenceDiagram = (function () {
     var Actor = (function () {
         function Actor(name, chart) {
             this.textHeight = 12;
@@ -22,7 +19,7 @@ var Chart = (function () {
         };
         Actor.prototype.getWidth = function () {
             return (this.chart.width -
-                (this.chart.padding * (_.size(chart.actors) + 1))) / _.size(chart.actors);
+                (this.chart.padding * (_.size(this.chart.actors) + 1))) / _.size(this.chart.actors);
         };
         Actor.prototype.getHeight = function () {
             return 40;
@@ -62,7 +59,7 @@ var Chart = (function () {
             this.actor2 = actor2;
         }
         Sequence.prototype.getIndex = function () {
-            return chart.sequences.indexOf(this);
+            return this.chart.sequences.indexOf(this);
         };
         Sequence.prototype.getWidth = function () {
             return Math.abs(this.actor1.getX() - this.actor2.getX());
@@ -110,8 +107,8 @@ var Chart = (function () {
         };
         return Sequence;
     })();
-    var Chart = (function () {
-        function Chart(width, height, el) {
+    var SequenceDiagram = (function () {
+        function SequenceDiagram(width, height, el) {
             this.padding = 20;
             this.actorsByName = {};
             this.actors = [];
@@ -120,10 +117,10 @@ var Chart = (function () {
             this.height = height;
             this.svg = $.createSvgTag('svg', { viewBox: "0 0 " + width + " " + height, preserveAspectRatio: "xMidYmin meet" }, '').appendTo(el);
         }
-        Chart.prototype.newSequence = function (src, dst, label) {
+        SequenceDiagram.prototype.newSequence = function (src, dst, label) {
             this.sequences.push(new Sequence(label, Actor.factory(src, this), Actor.factory(dst, this), this));
         };
-        Chart.prototype.render = function () {
+        SequenceDiagram.prototype.render = function () {
             // clear
             this.svg.innerHTML = '';
             // draw
@@ -136,15 +133,7 @@ var Chart = (function () {
                 });
             });
         };
-        return Chart;
+        return SequenceDiagram;
     })();
-    return Chart;
+    return SequenceDiagram;
 })();
-// Example
-var chart = new Chart(800, 400, 'body');
-chart.newSequence('UnityDeveloper', 'PackageServer', '*http* tcp/80 plain-text');
-chart.newSequence('PackageServer', 'FABRIKA', '*https* tcp/443 encrypted');
-chart.newSequence('FABRIKA', 'PackageServer', '*https* tcp/443 encrypted');
-chart.newSequence('PackageServer', 'UnityDeveloper', '*http* tcp/80 plain-text');
-chart.newSequence('PackageServer', 'NewThing', 'send datas');
-chart.render();

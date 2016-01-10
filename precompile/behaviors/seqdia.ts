@@ -1,13 +1,10 @@
 declare var $: any, _: any;
-//interface Vanilla {
-//  createHtml(tag:string, attrs?:{[key: string]: string}, content?:string): HTMLElement;  
-//}
 
 'use strict';
 
-var Chart = (function() {
+var SequenceDiagram = (function() {
 
-interface ChartObject { 
+interface SequenceDiagramObject { 
   getIndex(): number;
   getX(): number;
   getY(): number;
@@ -16,14 +13,14 @@ interface ChartObject {
   render(): HTMLElement[]
 }
 
-class Actor implements ChartObject {
+class Actor implements SequenceDiagramObject {
   public name: string;
-  chart: Chart;
-  constructor(name: string, chart: Chart) {
+  chart: SequenceDiagram;
+  constructor(name: string, chart: SequenceDiagram) {
     this.name = name;
     this.chart = chart;
   }
-  static factory(name: string, chart: Chart): Actor {
+  static factory(name: string, chart: SequenceDiagram): Actor {
     var actor = chart.actorsByName[name];
     if (!actor) {
       chart.actors.push(chart.actorsByName[name] = actor = new Actor(name, chart)); 
@@ -35,7 +32,7 @@ class Actor implements ChartObject {
   }
   getWidth(): number {
     return (this.chart.width - 
-      (this.chart.padding * (_.size(chart.actors) + 1))) / _.size(chart.actors); 
+      (this.chart.padding * (_.size(this.chart.actors) + 1))) / _.size(this.chart.actors); 
   }
   getHeight(): number {
     return 40;
@@ -62,19 +59,19 @@ class Actor implements ChartObject {
 }
 
 enum Direction { Left, Right };
-class Sequence implements ChartObject {
+class Sequence implements SequenceDiagramObject {
   label: string;
-  chart: Chart;
+  chart: SequenceDiagram;
   actor1: Actor;
   actor2: Actor;
-  constructor(label: string, actor1: Actor, actor2: Actor, chart: Chart) {
+  constructor(label: string, actor1: Actor, actor2: Actor, chart: SequenceDiagram) {
     this.label = label;
     this.chart = chart;
     this.actor1 = actor1;
     this.actor2 = actor2;
   }
   getIndex(): number {
-    return chart.sequences.indexOf(this);
+    return this.chart.sequences.indexOf(this);
   }  
   getWidth(): number {
     return Math.abs(this.actor1.getX() - this.actor2.getX()); 
@@ -124,7 +121,7 @@ class Sequence implements ChartObject {
   } 
 }
 
-class Chart {
+class SequenceDiagram {
   svg: any;
   width: number;
   height: number;
@@ -152,8 +149,8 @@ class Chart {
     
     // draw
     var chart = this;
-    _.each([ this.actors, this.sequences ], function(collection: ChartObject[]) {
-      _.each(collection, function(o: ChartObject) {
+    _.each([ this.actors, this.sequences ], function(collection: SequenceDiagramObject[]) {
+      _.each(collection, function(o: SequenceDiagramObject) {
         _.each(o.render(), function(el: HTMLElement) {
           chart.svg.append(el);
         });
@@ -162,16 +159,5 @@ class Chart {
   }
 }
 
-return Chart
+return SequenceDiagram
 })();
-
-// Example
-
-const chart = new Chart(800, 400, 'body');
-chart.newSequence('UnityDeveloper', 'PackageServer', '*http* tcp/80 plain-text');
-chart.newSequence('PackageServer', 'FABRIKA', '*https* tcp/443 encrypted');
-chart.newSequence('FABRIKA', 'PackageServer', '*https* tcp/443 encrypted');
-chart.newSequence('PackageServer', 'UnityDeveloper', '*http* tcp/80 plain-text');
-chart.newSequence('PackageServer', 'NewThing', 'send datas');
-chart.render()
-

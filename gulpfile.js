@@ -20,10 +20,10 @@ gulp.task('styles', function () {
 });
  
 gulp.task('behaviors', function () {
-	gulp.src('precompile/behaviors/*.ts')
+	gulp.src('precompile/behaviors/seqdia.ts')
 		.pipe(ts({
 			noImplicitAny: true,
-			out: 'global.js'
+			out: 'seqdia.js'
 		}))
 		.pipe(gulp.dest('static/behaviors/'));
 });
