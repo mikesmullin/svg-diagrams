@@ -115,7 +115,7 @@ var SequenceDiagram = (function () {
             this.sequences = [];
             this.width = width;
             this.height = height;
-            this.svg = $.createSvgTag('svg', { viewBox: "0 0 " + width + " " + height, preserveAspectRatio: "xMidYmin meet" }, '').appendTo(el);
+            this.svg = $.createSvgTag('svg', { viewBox: "0 0 " + width + " " + height, preserveAspectRatio: "xMidYMid meet" }, '').appendTo(el);
         }
         SequenceDiagram.prototype.newSequence = function (src, dst, label) {
             this.sequences.push(new Sequence(label, Actor.factory(src, this), Actor.factory(dst, this), this));

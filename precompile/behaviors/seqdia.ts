@@ -129,7 +129,7 @@ class SequenceDiagram {
   constructor(width: number, height: number, el: string) {
     this.width = width;
     this.height = height;
-    this.svg = $.createSvgTag('svg', { viewBox: "0 0 "+ width + " "+ height, preserveAspectRatio: "xMidYmin meet" }, '').appendTo(el);
+    this.svg = $.createSvgTag('svg', { viewBox: "0 0 "+ width + " "+ height, preserveAspectRatio: "xMidYMid meet" }, '').appendTo(el);
   }
 
   actorsByName: {[name: string]: Actor} = {};
