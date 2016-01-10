@@ -7,7 +7,16 @@ declare var $: any, _: any;
 
 var Chart = (function() {
 
-class Actor {
+interface ChartObject { 
+  getIndex(): number;
+  getX(): number;
+  getY(): number;
+  getWidth(): number;
+  getHeight(): number;
+  render(): HTMLElement[]
+}
+
+class Actor implements ChartObject {
   public name: string;
   chart: Chart;
   constructor(name: string, chart: Chart) {
@@ -33,17 +42,20 @@ class Actor {
   getX(): number {
     return (this.getWidth() + chart.padding) * this.getIndex();
   }
-  render(): any {
+  getY(): number {
+    return 0;
+  }
+  render(): HTMLElement[] {
     return [
       //$.createSvgTag('rect', { x: this.getX(), y: 0, width: this.getWidth(), height: this.getHeight()}),
-      $.createSvgTag('text', { x: this.getX() + 25, y: 25 }, this.name),
+      $.createSvgTag('text', { x: this.getX() + 25, y: this.getY() + 25 }, this.name),
       $.createSvgTag('rect', { class: 'strip', x: this.getX() + (this.getWidth()/2), y: this.getHeight(), width: 20, height: this.chart.height - this.getHeight() })
-    ];2
+    ];
   } 
 }
 
 enum Direction { Left, Right };
-class Sequence {
+class Sequence implements ChartObject {
   public label: string;
   chart: Chart;
   actor1: Actor;
@@ -58,13 +70,16 @@ class Sequence {
     return chart.sequences.indexOf(this);
   }  
   getWidth(): number {
-    return Math.abs(this.actor1.getX() - this.actor2.getX()); 
+    return Math.abs(this.actor1.getX() - this.actor2.getX()) -
+      Sequence.arrowWidth; 
   }
   getX(): number {
-    return Math.min(this.actor1.getX(), this.actor2.getX());
+    return Math.min(this.actor1.getX(), this.actor2.getX()) + 
+      (this.actor1.getWidth() / 2) +
+      (this.getDirection() == Direction.Left ? 0 : Sequence.arrowWidth);
   }
   getY(): number {
-    return this.getHeight() * this.getIndex();
+    return (this.actor1.getHeight() * 2) + (this.getHeight() * this.getIndex());
   }
   getHeight(): number {
     return 40; 
@@ -73,11 +88,22 @@ class Sequence {
     return this.actor1.getX() < this.actor2.getX() ? 
       Direction.Right : 
       Direction.Left;
-  } 
-  render(): any {
+  }
+  getArrowX(): number {
+    return this.getX() + 
+      (this.getDirection() == Direction.Left ? 0 : this.getWidth()); 
+  }
+  getArrowAngle(): number {
+    return this.getDirection() == Direction.Left ? -45 : 135
+  }
+  static arrowWidth = 15;
+  static labelHeight = 10; 
+  render(): HTMLElement[] {
     return [
+      $.createSvgTag('text', { x: this.getX(), y: this.getY() - Sequence.labelHeight }, this.label),
       $.createSvgTag('line', { x1: this.getX(), y1: this.getY(), x2: this.getX() + this.getWidth(), y2: this.getY() }),
-      $.createSvgTag('polygon', { points: "30,30 30,50 50,30" }) // draw on the actor2 side, and detect direction
+      $.createSvgTag('polygon', { points: "0,0 0,"+ Sequence.arrowWidth +" "+ Sequence.arrowWidth +",0", 
+        transform: "translate("+ this.getArrowX() +", "+ this.getY() +") rotate("+ this.getArrowAngle() +")" }) // draw on the actor2 side, and detect direction
     ];
   } 
 }
@@ -110,10 +136,12 @@ class Chart {
     
     // draw
     var chart = this;
-    _.each(this.actors, function(actor: Actor) {
-      _.each(actor.render(), (el: HTMLElement) => {
-        chart.svg.append(el);
-      });
+    _.each([ this.actors, this.sequences ], function(collection: ChartObject[]) {
+      _.each(collection, function(o: ChartObject) {
+        _.each(o.render(), function(el: HTMLElement) {
+          chart.svg.append(el);
+        });
+      })
     });
   }
 }
@@ -125,5 +153,8 @@ return Chart
 
 const chart = new Chart(400, 200, 'body');
 chart.newSequence('UnityDeveloper', 'PackageServer', '*http* tcp/80 plain-text');
+chart.newSequence('PackageServer', 'FABRIKA', '*https* tcp/443 encrypted');
+chart.newSequence('FABRIKA', 'PackageServer', '*https* tcp/443 encrypted');
+chart.newSequence('PackageServer', 'UnityDeveloper', '*http* tcp/80 plain-text');
 chart.render()
 

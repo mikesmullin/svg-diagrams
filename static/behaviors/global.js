@@ -27,13 +27,15 @@ var Chart = (function () {
         Actor.prototype.getX = function () {
             return (this.getWidth() + chart.padding) * this.getIndex();
         };
+        Actor.prototype.getY = function () {
+            return 0;
+        };
         Actor.prototype.render = function () {
             return [
                 //$.createSvgTag('rect', { x: this.getX(), y: 0, width: this.getWidth(), height: this.getHeight()}),
-                $.createSvgTag('text', { x: this.getX() + 25, y: 25 }, this.name),
+                $.createSvgTag('text', { x: this.getX() + 25, y: this.getY() + 25 }, this.name),
                 $.createSvgTag('rect', { class: 'strip', x: this.getX() + (this.getWidth() / 2), y: this.getHeight(), width: 20, height: this.chart.height - this.getHeight() })
             ];
-            2;
         };
         return Actor;
     })();
@@ -54,13 +56,16 @@ var Chart = (function () {
             return chart.sequences.indexOf(this);
         };
         Sequence.prototype.getWidth = function () {
-            return Math.abs(this.actor1.getX() - this.actor2.getX());
+            return Math.abs(this.actor1.getX() - this.actor2.getX()) -
+                Sequence.arrowWidth;
         };
         Sequence.prototype.getX = function () {
-            return Math.min(this.actor1.getX(), this.actor2.getX());
+            return Math.min(this.actor1.getX(), this.actor2.getX()) +
+                (this.actor1.getWidth() / 2) +
+                (this.getDirection() == Direction.Left ? 0 : Sequence.arrowWidth);
         };
         Sequence.prototype.getY = function () {
-            return this.getHeight() * this.getIndex();
+            return (this.actor1.getHeight() * 2) + (this.getHeight() * this.getIndex());
         };
         Sequence.prototype.getHeight = function () {
             return 40;
@@ -70,12 +75,23 @@ var Chart = (function () {
                 Direction.Right :
                 Direction.Left;
         };
+        Sequence.prototype.getArrowX = function () {
+            return this.getX() +
+                (this.getDirection() == Direction.Left ? 0 : this.getWidth());
+        };
+        Sequence.prototype.getArrowAngle = function () {
+            return this.getDirection() == Direction.Left ? -45 : 135;
+        };
         Sequence.prototype.render = function () {
             return [
+                $.createSvgTag('text', { x: this.getX(), y: this.getY() - Sequence.labelHeight }, this.label),
                 $.createSvgTag('line', { x1: this.getX(), y1: this.getY(), x2: this.getX() + this.getWidth(), y2: this.getY() }),
-                $.createSvgTag('polygon', { points: "30,30 30,50 50,30" }) // draw on the actor2 side, and detect direction
+                $.createSvgTag('polygon', { points: "0,0 0," + Sequence.arrowWidth + " " + Sequence.arrowWidth + ",0",
+                    transform: "translate(" + this.getArrowX() + ", " + this.getY() + ") rotate(" + this.getArrowAngle() + ")" }) // draw on the actor2 side, and detect direction
             ];
         };
+        Sequence.arrowWidth = 15;
+        Sequence.labelHeight = 10;
         return Sequence;
     })();
     var Chart = (function () {
@@ -96,9 +112,11 @@ var Chart = (function () {
             this.svg.innerHTML = '';
             // draw
             var chart = this;
-            _.each(this.actors, function (actor) {
-                _.each(actor.render(), function (el) {
-                    chart.svg.append(el);
+            _.each([this.actors, this.sequences], function (collection) {
+                _.each(collection, function (o) {
+                    _.each(o.render(), function (el) {
+                        chart.svg.append(el);
+                    });
                 });
             });
         };
@@ -109,44 +127,7 @@ var Chart = (function () {
 // Example
 var chart = new Chart(400, 200, 'body');
 chart.newSequence('UnityDeveloper', 'PackageServer', '*http* tcp/80 plain-text');
+chart.newSequence('PackageServer', 'FABRIKA', '*https* tcp/443 encrypted');
+chart.newSequence('FABRIKA', 'PackageServer', '*https* tcp/443 encrypted');
+chart.newSequence('PackageServer', 'UnityDeveloper', '*http* tcp/80 plain-text');
 chart.render();
-// minimal vector math lib
-var Vector3 = (function () {
-    function Vector3(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-    Vector3.dotProduct = function (a, b) {
-        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
-    };
-    Vector3.crossProduct = function (a, b) {
-        return new Vector3((a.y * b.z) - (a.z * b.y), (a.z * b.x) - (a.x * b.z), (a.x & b.y) - (a.y * b.x));
-    };
-    Vector3.scale = function (a, t) {
-        return new Vector3(a.x * t, a.y * t, a.z * t);
-    };
-    Vector3.add = function (a, b) {
-        return new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
-    };
-    Vector3.add3 = function (a, b, c) {
-        return new Vector3(a.x + b.x + c.x, a.y + b.y + c.y, a.z + b.z + c.z);
-    };
-    Vector3.subtract = function (a, b) {
-        return new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
-    };
-    Vector3.len = function (a) {
-        return Math.sqrt(Vector3.dotProduct(a, a));
-    };
-    Vector3.unitVector = function (a) {
-        return Vector3.scale(a, 1 / Vector3.len(a));
-    };
-    Vector3.reflectThrough = function (a, normal) {
-        var d = Vector3.scale(normal, Vector3.dotProduct(a, normal));
-        return Vector3.subtract(Vector3.scale(d, 2), a);
-    };
-    Vector3.UP = new Vector3(0, 1, 0);
-    Vector3.ZERO = new Vector3(0, 0, 0);
-    Vector3.GRAY = new Vector3(20, 20, 20);
-    return Vector3;
-})();
